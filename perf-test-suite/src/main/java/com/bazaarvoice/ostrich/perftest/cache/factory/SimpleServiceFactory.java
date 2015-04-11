@@ -1,15 +1,14 @@
-package com.bazaarvoice.ostrich.perftest.core;
+package com.bazaarvoice.ostrich.perftest.cache.factory;
 
 import com.bazaarvoice.ostrich.MultiThreadedServiceFactory;
 import com.bazaarvoice.ostrich.ServiceEndPoint;
-import com.bazaarvoice.ostrich.metrics.Metrics;
-import com.bazaarvoice.ostrich.perftest.utils.HashFunction;
+import com.bazaarvoice.ostrich.perftest.core.Service;
+import com.bazaarvoice.ostrich.perftest.core.utils.HashFunction;
+import com.bazaarvoice.ostrich.perftest.core.utils.MetricsUtility;
 import com.bazaarvoice.ostrich.pool.ServicePoolBuilder;
 import com.yammer.metrics.core.Meter;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.TimerContext;
-
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -25,11 +24,9 @@ public class SimpleServiceFactory implements MultiThreadedServiceFactory<Service
      * private constructor
      */
     private SimpleServiceFactory() {
-        String serviceName = this.getServiceName();
-        Metrics metrics = Metrics.forClass(this.getClass());
-        _serviceCreated = metrics.newMeter(serviceName, "Service-Created", "Service-Created", TimeUnit.SECONDS);
-        _serviceDestroyed = metrics.newMeter(serviceName, "Service-Destroyed", "Service-Destroyed", TimeUnit.SECONDS);
-        _serviceTimer = metrics.newTimer(serviceName, "Service-Time", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+        _serviceCreated = MetricsUtility.newMeter(SimpleServiceFactory.class, "Service-Created");
+        _serviceDestroyed = MetricsUtility.newMeter(SimpleServiceFactory.class, "Service-Destroyed");
+        _serviceTimer = MetricsUtility.newTimer(SimpleServiceFactory.class, "Service-Time");
     }
 
     /**

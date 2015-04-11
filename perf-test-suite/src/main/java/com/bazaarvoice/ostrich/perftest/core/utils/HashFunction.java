@@ -1,4 +1,4 @@
-package com.bazaarvoice.ostrich.perftest.utils;
+package com.bazaarvoice.ostrich.perftest.core.utils;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
