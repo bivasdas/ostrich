@@ -1,4 +1,4 @@
-package com.bazaarvoice.ostrich.perftest.utils;
+package com.bazaarvoice.ostrich.perftest.core.utils;
 
 import com.google.common.base.Strings;
 import org.apache.commons.cli.BasicParser;
@@ -7,9 +7,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-
-import java.io.File;
-import java.io.PrintStream;
 
 import static com.bazaarvoice.ostrich.pool.ServiceCachingPolicy.ExhaustionAction;
 
@@ -20,22 +17,43 @@ import static com.bazaarvoice.ostrich.pool.ServiceCachingPolicy.ExhaustionAction
 @SuppressWarnings ("deprecation")
 public class Arguments {
 
+    private enum TestType {
+        POOL,
+        CACHE
+    }
+
+    private Options options = new Options();
     private int _threadSize = 100;
     private int _workSize = 1024 * 5;
     private long _runTimeSecond = Long.MAX_VALUE;
     private int _maxInstance = 10;
     private int _idleTimeSecond = 10;
-    private boolean _runSingletonMode = false;
+    private boolean _useMultiThreadedCache = false;
     private ExhaustionAction _exhaustionAction = ExhaustionAction.WAIT;
     private int _reportingIntervalSeconds = 1;
-    private PrintStream _output = System.out;
-    private boolean _printStats = false;
     private int _chaosWorkers = 2;
     private int _chaosInterval = 15;
+    private TestType _testType = null;
 
+    private int _zookeeperPort = 2181;
+    private int _serverStartingPort = 8000;
+    private int _numServers = 10;
 
     public Arguments(String[] args) {
+        setupOptions();
         parseArgs(args);
+    }
+
+    public TestType getTestType() {
+        return _testType;
+    }
+
+    public boolean isPoolTest() {
+        return _testType == TestType.POOL;
+    }
+
+    public boolean isCacheTest() {
+        return _testType == TestType.CACHE;
     }
 
     public int getThreadSize() {
@@ -62,20 +80,12 @@ public class Arguments {
         return _exhaustionAction;
     }
 
-    public PrintStream getOutput() {
-        return _output;
-    }
-
-    public boolean doPrintStats() {
-        return _printStats;
-    }
-
     public int getReportingIntervalSeconds() {
         return _reportingIntervalSeconds;
     }
 
-    public boolean isRunSingletonMode() {
-        return _runSingletonMode;
+    public boolean useMultiThreadedCache() {
+        return _useMultiThreadedCache;
     }
 
     public int getChaosWorkers() {
@@ -86,28 +96,43 @@ public class Arguments {
         return _chaosInterval;
     }
 
-    private void parseArgs(String[] args) {
+    public int getZookeeperPort() {
+        return _zookeeperPort;
+    }
 
-        Options options = new Options();
+    public int getServerStartingPort() {
+        return _serverStartingPort;
+    }
 
+    public int getNumServers() {
+        return _numServers;
+    }
+
+    private void setupOptions() {
         options.addOption("h", "help", false, "Show this help message!");
+        options.addOption("T", "test-type", true, "test type to run, POOL or CACHE");
 
         options.addOption("t", "thread-size", true, "# of workers threads to run, default is 100");
-        options.addOption("w", "work-size", true, "length of the string to generate randomly and crunch hash, default is 1024 X 5 (5kb)");
+        options.addOption("w", "work-size", true, "length of the string to generate randomly and crunch hash, default is 5120 (5kb)");
         options.addOption("r", "run-time", true, "seconds to run before it kills worker running threads, default is 9223372036854775807 (Long.MAX_VALUE)");
 
         options.addOption("m", "max-instances", true, "Max instances per end point in service cache, default is 10");
         options.addOption("i", "idle-time", true, "Idle time before service cache should take evict action, default is 10");
         options.addOption("e", "exhaust-action", true, "Exhaust action when cache is exhausted, acceptable values are WAIT|FAIL|GROW, default is WAIT");
 
-        options.addOption("g", "singleton-mode", false, "Run with singleton policy mode, default is false");
+        options.addOption("g", "new-cache", false, "Run with new multi threaded cache, default is false");
 
         options.addOption("c", "chaos-count", true, "Number of chaos workers to use, default is 2");
         options.addOption("l", "chaos-interval", true, "time (in seconds) to wait between chaos, default is 15");
 
-        options.addOption("o", "output-file", true, "Output file to use instead of STDOUT");
-        options.addOption("v", "report-every", true, "Reports the running statistics every # seconds");
-        options.addOption("s", "statistics", false, "Output current running stats on STDOUT, ignored if --output-file is not provided");
+        options.addOption("v", "report-every", true, "Reports on System.out every # seconds");
+
+        options.addOption("z", "zookeeper-port", true, "zookeeper port to use, default is 2181");
+        options.addOption("p", "starting-port", true, "starting port to use for services, default is 8000");
+        options.addOption("n", "num-servers", true, "number of services to instantiate, default is 10");
+    }
+
+    private void parseArgs(String[] args) {
 
         String opt = null;
         String longOpt = null;
@@ -118,11 +143,15 @@ public class Arguments {
             CommandLine commandLine = commandLineParser.parse(options, args);
 
             if (commandLine.hasOption("h")) {
-                help(options);
+                help();
+            }
+
+            if(!commandLine.hasOption("T")) {
+                printError(new Exception("Must provide -T/--test-type"), null, null, null);
+                help();
             }
 
             for (Option option : commandLine.getOptions()) {
-
                 opt = option.getOpt();
                 longOpt = option.getLongOpt();
                 value = option.getValue();
@@ -146,14 +175,8 @@ public class Arguments {
                     case "e":
                         _exhaustionAction = ExhaustionAction.valueOf(value);
                         break;
-                    case "o":
-                        _output = createPrintStream(value);
-                        break;
                     case "g":
-                        _runSingletonMode = true;
-                        break;
-                    case "s":
-                        _printStats = true;
+                        _useMultiThreadedCache = true;
                         break;
                     case "v":
                         _reportingIntervalSeconds = Integer.parseInt(value);
@@ -164,21 +187,30 @@ public class Arguments {
                     case "l":
                         _chaosInterval = Integer.parseInt(value);
                         break;
+                    case "T":
+                        _testType = TestType.valueOf(value);
+                        break;
+                    case "z":
+                        _zookeeperPort = Integer.parseInt(value);
+                        break;
+                    case "p":
+                        _serverStartingPort = Integer.parseInt(value);
+                        break;
+                    case "n":
+                        _numServers = Integer.parseInt(value);
+                        break;
                 }
-            }
-            if (_output == System.out && _printStats) {
-                throw new Exception("Cannot print both report log and statistics to STDOUT at the same time");
             }
         } catch (IllegalArgumentException ex) {
             printError(opt, longOpt, value);
-            help(options);
+            help();
         } catch (Exception ex) {
             printError(ex, opt, longOpt, value);
-            help(options);
+            help();
         }
     }
 
-    private void help(Options options) {
+    private void help() {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("Ostrich Performance Test Suite", options);
         System.exit(0);
@@ -193,14 +225,5 @@ public class Arguments {
     private void printError(Exception ex, String opt, String longOpt, String value) {
         System.err.println(ex.getMessage());
         printError(opt, longOpt, value);
-    }
-
-    private PrintStream createPrintStream(String filePath)
-            throws Exception {
-        File file = new File(filePath);
-        if (!file.createNewFile()) {
-            throw new Exception("Cannot create file: " + filePath);
-        }
-        return new PrintStream(file);
     }
 }

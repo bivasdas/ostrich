@@ -1,4 +1,7 @@
-package com.bazaarvoice.ostrich.perftest.core;
+package com.bazaarvoice.ostrich.perftest.cache.factory;
+
+import com.bazaarvoice.ostrich.perftest.core.Result;
+import com.bazaarvoice.ostrich.perftest.core.ResultFactory;
 
 public class SimpleResultFactory implements ResultFactory<String> {
 

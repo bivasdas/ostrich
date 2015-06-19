@@ -1,13 +1,14 @@
-package com.bazaarvoice.ostrich.perftest.core;
+package com.bazaarvoice.ostrich.perftest.cache.factory;
 
-import com.bazaarvoice.ostrich.ServiceEndPoint;
 import com.bazaarvoice.ostrich.MultiThreadedServiceFactory;
-import com.bazaarvoice.ostrich.metrics.Metrics;
-import com.bazaarvoice.ostrich.perftest.utils.HashFunction;
+import com.bazaarvoice.ostrich.ServiceEndPoint;
+import com.bazaarvoice.ostrich.perftest.core.Service;
+import com.bazaarvoice.ostrich.perftest.core.utils.HashFunction;
+import com.bazaarvoice.ostrich.perftest.core.utils.MetricsUtility;
 import com.bazaarvoice.ostrich.pool.ServicePoolBuilder;
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+
 
 /**
  * A service factory, as needed in the ServiceCache
@@ -21,11 +22,10 @@ public class SimpleServiceFactory implements MultiThreadedServiceFactory<Service
     /**
      * private constructor
      */
-    private SimpleServiceFactory(MetricRegistry metricRegistry) {
-        Metrics.InstanceMetrics instanceMetrics = Metrics.forInstance(metricRegistry, this, "ServiceFactory");
-        _serviceCreated = instanceMetrics.meter("Created");
-        _serviceDestroyed = instanceMetrics.meter("Destroyed");
-        _serviceTimer = instanceMetrics.timer("Timer");
+    private SimpleServiceFactory() {
+        _serviceCreated = MetricsUtility.newMeter(SimpleServiceFactory.class, "Service-Created");
+        _serviceDestroyed = MetricsUtility.newMeter(SimpleServiceFactory.class, "Service-Destroyed");
+        _serviceTimer = MetricsUtility.newTimer(SimpleServiceFactory.class, "Service-Time");
     }
 
     /**
@@ -33,8 +33,8 @@ public class SimpleServiceFactory implements MultiThreadedServiceFactory<Service
      *
      * @return a simple service factory
      */
-    public static SimpleServiceFactory newInstance(MetricRegistry metricRegistry) {
-        return new SimpleServiceFactory(metricRegistry);
+    public static SimpleServiceFactory newInstance() {
+        return new SimpleServiceFactory();
     }
 
     @Override
