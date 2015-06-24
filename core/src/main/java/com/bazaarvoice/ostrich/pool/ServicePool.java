@@ -303,6 +303,14 @@ class ServicePool<S> implements com.bazaarvoice.ostrich.ServicePool<S> {
                 // enqueue a health check for the end point and mark it as unavailable for the time being.
                 markEndPointAsBad(endPoint);
                 LOG.debug("Bad end point discovered. End point ID: {}", endPoint.getId(), e);
+                // instead of marking them directly as bad, we should flag them for a healthcheck and then mark as bad,
+                //
+                // HealthCheckResult result = checkHealth(endPoint);
+                // if(!result.isHealthy()) {
+                //     markEndPointAsBad(endPoint);
+                // }
+                //
+                // this needs to happen asynchronously though
             }
             throw e;
         } finally {
