@@ -1,16 +1,13 @@
 package com.bazaarvoice.ostrich.perftest.pool.web;
 
-import com.bazaarvoice.ostrich.perftest.core.utils.MetricsUtility;
 import com.bazaarvoice.ostrich.perftest.core.utils.Utilities;
 import com.bazaarvoice.ostrich.perftest.pool.web.service.HashService;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.server.Server;
 
-import javax.validation.Validation;
 import java.io.Closeable;
 import java.io.File;
 
@@ -35,10 +32,12 @@ public class EmbeddedServer<C extends Configuration, S extends Application<C>> i
 
     public static <C extends Configuration, S extends Application<C>> EmbeddedServer<C, S> newServer(S service, C configuration) throws Exception {
         String environmentName = HashService.getServiceName();
-        Environment environment = new Environment(environmentName, Jackson.newObjectMapper(), Validation.buildDefaultValidatorFactory().getValidator(),
-                MetricsUtility.getMetricsRegistry(), Thread.currentThread().getContextClassLoader());
+        Bootstrap<C> bootstrap = new Bootstrap<>(service);
+        Environment environment = new Environment(environmentName, bootstrap.getObjectMapper(), bootstrap.getValidatorFactory().getValidator(),
+                bootstrap.getMetricRegistry(), bootstrap.getClassLoader());
+        service.initialize(bootstrap);
         service.run(configuration, environment);
-        Server server = new DefaultServerFactory().build(environment);
+        Server server = configuration.getServerFactory().build(environment);
         return new EmbeddedServer<>(server, configuration);
     }
 
