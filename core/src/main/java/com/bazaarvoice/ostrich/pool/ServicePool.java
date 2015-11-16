@@ -429,9 +429,8 @@ class ServicePool<S> implements com.bazaarvoice.ostrich.ServicePool<S> {
     }
 
     private synchronized void addEndPoint(ServiceEndPoint endPoint) {
-        _serviceCache.register(endPoint);
         _recentlyRemovedEndPoints.remove(endPoint);
-        _badEndPoints.remove(endPoint);
+        markEndPointAsBad(endPoint);
         LOG.debug("End point added to service pool. End point ID: {}", endPoint.getId());
     }
 

@@ -129,6 +129,9 @@ public class ServicePoolCachingTest {
         ServicePool<Service> pool = newPool(CACHE_ONE_INSTANCE_PER_ENDPOINT);
         Service service = pool.execute(NEVER_RETRY, IDENTITY_CALLBACK);
 
+        // Set it up so that when we health check FOO, that it becomes healthy.
+        when(_serviceFactory.isHealthy(FOO_ENDPOINT)).thenReturn(true);
+
         // Capture the end point listener that was registered with HostDiscovery
         ArgumentCaptor<HostDiscovery.EndPointListener> listener = ArgumentCaptor.forClass(
                 HostDiscovery.EndPointListener.class);
@@ -137,6 +140,8 @@ public class ServicePoolCachingTest {
         // Remove the end point from host discovery then add it back
         listener.getValue().onEndPointRemoved(FOO_ENDPOINT);
         listener.getValue().onEndPointAdded(FOO_ENDPOINT);
+
+        pool.forceHealthChecks();
 
         assertNotSame(service, pool.execute(NEVER_RETRY, IDENTITY_CALLBACK));
     }
@@ -295,6 +300,8 @@ public class ServicePoolCachingTest {
 
             // Let the initial callback terminate...
             canReturn.countDown();
+
+            pool.forceHealthChecks();
 
             assertNotSame(serviceFuture.get(), pool.execute(NEVER_RETRY, IDENTITY_CALLBACK));
         } finally {
