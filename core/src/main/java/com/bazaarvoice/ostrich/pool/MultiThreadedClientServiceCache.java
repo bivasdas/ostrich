@@ -82,7 +82,6 @@ class MultiThreadedClientServiceCache<S> implements ServiceCache<S> {
 
         public HeavyServiceHandle(T service, ServiceEndPoint endPoint) {
             super(service, endPoint);
-
             _sellByDate = System.currentTimeMillis() + DUP_REGISTRATION_WINDOW_MILLIS;
         }
 
