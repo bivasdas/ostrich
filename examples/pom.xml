@@ -19,5 +19,6 @@
     <modules>
         <module>calculator</module>
         <module>dictionary</module>
+        <module>heavyweight-client-example</module>
     </modules>
 </project>
