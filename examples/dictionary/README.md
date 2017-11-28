@@ -36,7 +36,6 @@ Running the Example
 
 Configuration
 -------------
-Ostrich uses [Chameleon](https://github.com/bazaarvoice/chameleon) for setting the default ZooKeeper connect string.
 Please refer to the Configuration section of the [Calculator Documentation]
 (../calculator/README.md) for instructions on how to set the
 ZooKeeper connect string.
