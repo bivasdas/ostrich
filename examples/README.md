@@ -3,7 +3,7 @@ Examples
 
 Calculator
 ----------
-Illustrates a very simple [Dropwizard] (http://dropwizard.codahale.com/)-based server and client that uses
+Illustrates a very simple [Dropwizard] (http://www.dropwizard.io/)-based server and client that uses
 ZooKeeper-based service registration and host discovery.
 
 Dictionary

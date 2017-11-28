@@ -13,9 +13,7 @@ by monitoring health-checks on the services.
 
 #### 2. ZooKeeper
 Ostrich uses [ZooKeeper](http://zookeeper.apache.org/) to store all of its data and consequently requires the ability to
-connect to a ZooKeeper ensemble. There are multiple ZooKeeper ensembles running in [Nexus]
-(https://github.com/bazaarvoice/nexus/blob/master/README.md) VPCs within AWS. Currently available ensembles are listed
-on the [ZooKeeper-Deploy](https://github.com/bazaarvoice/zookeeper-deploy/blob/master/README.md) page.
+connect to a ZooKeeper ensemble.
 
 ZooKeeper supports basic monitoring via the network using the [four letter words]
 (http://zookeeper.apache.org/doc/r3.4.3/zookeeperAdmin.html#sc_zkCommands).  You can telnet or send a netcat command to

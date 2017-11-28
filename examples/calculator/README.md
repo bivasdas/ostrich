@@ -1,6 +1,6 @@
 Calculator Example
 ==================
-The calculator example illustrates a very simple [Dropwizard] (http://dropwizard.codahale.com/)-based server and client
+The calculator example illustrates a very simple [Dropwizard] (http://www.dropwizard.io/)-based server and client
 that uses ZooKeeper-based service registration and host discovery.
 
 
@@ -42,16 +42,14 @@ Running the Example
 
 Configuration
 -------------
-Ostrich uses [Chameleon](https://github.com/bazaarvoice/chameleon) for setting the default ZooKeeper connect string.
-The ZooKeeper connect string inferred by Chameleon can be overridden through an environment variable or
-system property. The ZooKeeper connect string can be set in Ostrich programmatically through the ZooKeeperConfiguration
+The ZooKeeper connect string can be set in Ostrich programmatically through the ZooKeeperConfiguration
 object. In this example, the ZooKeeperConfiguration object is exposed through DropWizard and can be set via a YAML
 configuration file.
 
 ### Setting ZooKeeper Connect String via Environment
 Starting the calculator server (Step 3 above):
 
-	$ CHAMELEON_ZOOKEEPER_ENSEMBLE=localhost:2181
+	$ ZOOKEEPER_ENSEMBLE=localhost:2181
 	$ cd examples/calculator/service
 	$ java -jar target/calculator-service-*.jar server
 	
@@ -61,7 +59,7 @@ The same process can be used to set the ZooKeeper connect string for the calcula
 Starting the calculator server (Step 3 above):
 
 	$ cd examples/calculator/service
-	$ java -Dchameleon.zookeeper.ensemble=localhost:2181 -jar target/calculator-service-*.jar server
+	$ java -Dzookeeper.ensemble=localhost:2181 -jar target/calculator-service-*.jar server
 	
 The same process can be used to set the ZooKeeper connect string for the calculator client (Step 4 above).
 
